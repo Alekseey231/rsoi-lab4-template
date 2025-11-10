@@ -20,6 +20,7 @@ services:
     database:
       enabled: true
       name: LibraryServiceDb
+      initDatabase: true
     healthCheck:
       enabled: true
       path: /manage/health
@@ -49,6 +50,7 @@ services:
     database:
       enabled: true
       name: RatingServiceDb
+      initDatabase: true
     healthCheck:
       enabled: true
       path: /manage/health
@@ -78,6 +80,7 @@ services:
     database:
       enabled: true
       name: ReservationServiceDb
+      initDatabase: true
     healthCheck:
       enabled: true
       path: /manage/health

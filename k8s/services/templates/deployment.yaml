@@ -37,6 +37,8 @@ spec:
               key: postgres-root-password
         - name: ConnectionStrings__DefaultConnection
           value: "User ID=$(DB_USERNAME);Password=$(DB_PASSWORD);Server={{ $.Values.global.database.host }};Port={{ $.Values.global.database.port }};Database={{ $service.database.name }};"
+        - name: INIT_DATABASE
+          value: "{{ $service.database.initDatabase | default "false" }}"
         {{- end }}
         {{- if $service.healthCheck.enabled }}
         readinessProbe:
