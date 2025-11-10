@@ -81,16 +81,43 @@ jobs:
 
       - name: Install Helm charts
         run: |
+          echo "=== Installing database ==="
           helm install database ./k8s/db/
           
+          echo "=== Database pods status (BEFORE wait) ==="
+          kubectl get pods -l app=postgres -o wide
+          kubectl describe pods -l app=postgres | grep -A 10 "Status:\|State:"
+          
+          echo "=== Waiting for database ==="
           kubectl wait --for=condition=ready pod -l app=postgres --timeout=300s
           
+          echo "Database is ready"
+
+          echo "=== Installing services ==="
           helm install services ./k8s/services/
 
-          kubectl wait --for=condition=ready pod -l app=gateway-service --timeout=600s
-          kubectl wait --for=condition=ready pod -l app=library-service --timeout=600s  
-          kubectl wait --for=condition=ready pod -l app=rating-service --timeout=600s
-          kubectl wait --for=condition=ready pod -l app=reservation-service --timeout=600s
+          wait_for_service() {
+            local service=$1
+            echo "=== $service pods status (BEFORE wait) ==="
+            kubectl get pods -l app=$service -o wide
+            echo "--- Current pod states ---"
+            kubectl describe pods -l app=$service | grep -A 5 "Status:\|State:" || true
+            echo "--- Recent logs ---"
+            kubectl logs -l app=$service --tail=5 || true
+            
+            echo "=== Waiting for $service ==="
+            kubectl wait --for=condition=ready pod -l app=$service --timeout=60s
+            
+            echo "$service is ready"
+          }
+
+          wait_for_service "gateway-service"
+          wait_for_service "library-service"  
+          wait_for_service "rating-service"
+          wait_for_service "reservation-service"
+
+          echo "=== Final status ==="
+          kubectl get all -l app
 
       - name: Install Ingress
         run: |
